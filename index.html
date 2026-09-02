@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>SNOWALLSTAR</title>
+  <link id="site-favicon" rel="icon" href="">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; min-height: 100vh; overflow-x: hidden; overflow-y: auto; background-color: #020203; color: #ffffff; }
+    body { display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+
+    @keyframes darkEntrance {
+      0% { opacity: 0; transform: scale(0.95) translateY(25px); filter: blur(10px); }
+      100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
+    }
+
+    #bg-layer {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      background-size: cover !important; background-position: center center !important; background-repeat: no-repeat !important; background-color: #020203;
+      z-index: 1; filter: brightness(0.45) contrast(1.2); transition: background-image 0.8s ease;
+    }
+
+    .overlay { 
+      position: fixed; inset: 0; width: 100%; height: 100%; 
+      background: radial-gradient(circle at center, rgba(10, 10, 15, 0.3) 0%, rgba(2, 2, 3, 0.98) 85%); 
+      z-index: 2; pointer-events: none; 
+    }
+    #particles-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+
+    .container { 
+      position: relative; z-index: 3; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 20px; text-align: center; 
+      animation: darkEntrance 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    
+    .main-wrapper { 
+      display: flex; flex-direction: column; align-items: center; justify-content: center; 
+      gap: clamp(18px, 2.8vh, 26px); width: 100%; max-width: 700px; 
+      margin: auto 0;
+    }
+
+    .header-text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    
+    .title-large {
+      font-family: 'Bebas Neue', cursive; font-size: clamp(4rem, 9.5vw, 7.8rem); letter-spacing: clamp(6px, 2.2vw, 18px);
+      line-height: 0.88; text-transform: uppercase; font-weight: 800;
+      background: linear-gradient(135deg, #ffffff 0%, #777780 40%, #ffffff 80%, #bbbbcc 100%);
+      background-size: 200% auto; color: transparent; -webkit-background-clip: text; background-clip: text;
+      animation: textShimmer 5s linear infinite;
+      filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.2));
+    }
+
+    @keyframes textShimmer { 0% { background-position: 200% center; } 100% { background-position: -200% center; } }
+
+    .title-small { font-size: clamp(0.85rem, 1.4vw, 1.1rem); color: #9999a6; letter-spacing: clamp(6px, 1.5vw, 12px); text-transform: uppercase; font-weight: 700; }
+
+    .logo-box {
+      width: clamp(420px, 78vw, 880px); height: clamp(220px, 36vw, 390px);
+      background: rgba(10, 10, 15, 0.7); border: 1.5px solid rgba(255, 255, 255, 0.18); border-radius: 24px;
+      backdrop-filter: blur(18px); display: none; justify-content: center; align-items: center; padding: 25px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+    .logo-img { max-width: 98%; max-height: 98%; object-fit: contain; }
+    .logo-icon { font-size: clamp(6.5rem, 14vw, 9.5rem); color: #ffffff; }
+
+    .btn-container { width: 100%; display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
+
+    .btn-main-primary {
+      width: 100%; padding: 12px 18px; font-size: clamp(0.85rem, 1.3vw, 0.98rem); font-weight: 700;
+      letter-spacing: 1px; color: #020203; text-decoration: none; background: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.9); border-radius: 10px; 
+      box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+      transition: all 0.25s ease; display: flex; flex-direction: column; align-items: center; gap: 1px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-main-primary:hover { background: #d0d0d5; transform: translateY(-2px); }
+    .btn-main-primary span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .btn-main-primary span.sub-text { font-size: clamp(0.55rem, 0.8vw, 0.65rem); color: #555555; font-weight: 600; }
+
+    .btn-sub-grid {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; width: 100%;
+    }
+
+    .btn-main-secondary {
+      flex: 0 0 calc(50% - 4px); max-width: calc(50% - 4px);
+      padding: 10px 12px; font-size: clamp(0.75rem, 1.1vw, 0.85rem); font-weight: 600;
+      letter-spacing: 0.4px; color: #dddddd; text-decoration: none; background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 9px; backdrop-filter: blur(8px);
+      transition: transform 0.25s ease, background-color 0.25s ease; display: flex; flex-direction: column; align-items: center; gap: 1px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-main-secondary span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+    .btn-main-secondary:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; transform: translateY(-2px); z-index: 2; }
+    .btn-main-secondary span.sub-text { font-size: clamp(0.5rem, 0.7vw, 0.6rem); color: #888888; font-weight: 400; }
+
+    .contact-link {
+      display: inline-flex; align-items: center; gap: 6px; font-size: clamp(0.7rem, 1vw, 0.78rem); color: #aaaaaa;
+      text-decoration: none; background: rgba(255, 255, 255, 0.03); padding: 6px 16px; border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(6px); font-weight: 600; transition: 0.3s;
+    }
+    .contact-link:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+    .footer-wrapper { margin-top: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .footer-text { font-size: clamp(0.6rem, 0.9vw, 0.7rem); font-weight: 700; letter-spacing: 2px; color: #44444c; text-transform: uppercase; }
+
+    .btn-admin-trigger {
+      background: transparent; border: 1px solid rgba(255, 255, 255, 0.06); color: #55555c; font-size: 0.6rem;
+      letter-spacing: 1px; padding: 2px 10px; border-radius: 12px; cursor: pointer; font-weight: 600; transition: 0.3s;
+    }
+    .btn-admin-trigger:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.25); }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+    .modal-card { background: rgba(12, 12, 18, 0.95); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 20px; padding: 30px; width: 100%; max-width: 380px; text-align: center; }
+    .modal-title { font-family: 'Bebas Neue', cursive; font-size: 2rem; color: #ffffff; margin-bottom: 20px; font-weight: 700; }
+    .input-group { margin-bottom: 15px; text-align: left; }
+    .input-group label { display: block; font-size: 0.75rem; color: #888888; margin-bottom: 6px; font-weight: 600; }
+    .input-field { width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: #ffffff; outline: none; }
+    .btn-login { width: 100%; padding: 12px; margin-top: 10px; background: #ffffff; color: #000; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
+
+    .audio-player-box {
+      position: fixed; bottom: 20px; right: 20px; z-index: 100; display: flex; align-items: center; gap: 12px;
+      padding: 7px 15px 7px 12px; background: rgba(8, 8, 12, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 50px; backdrop-filter: blur(25px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+    }
+    .player-disc {
+      width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #222, #000);
+      border: 1.5px solid rgba(255, 255, 255, 0.3); display: flex; align-items: center; justify-content: center;
+      animation: spinDisc 4s linear infinite; animation-play-state: paused;
+    }
+    .player-disc.playing { animation-play-state: running; }
+    .player-disc::after { content: ''; width: 7px; height: 7px; background: #fff; border-radius: 50%; }
+    @keyframes spinDisc { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .player-info { display: flex; flex-direction: column; max-width: 120px; }
+    .player-title { font-size: 0.72rem; font-weight: 600; color: #ffffff; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .player-status-wrapper { display: flex; align-items: center; gap: 5px; }
+    .status-dot { width: 5px; height: 5px; border-radius: 50%; background-color: #666; }
+    .status-dot.active { background-color: #22c55e; box-shadow: 0 0 8px #22c55e; }
+    .player-status { font-size: 0.52rem; color: #888; font-weight: 600; }
+    .volume-box { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.04); padding: 4px 8px; border-radius: 15px; }
+    .volume-slider { -webkit-appearance: none; width: 38px; height: 3px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; outline: none; cursor: pointer; }
+    .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; border-radius: 50%; background: #fff; cursor: pointer; }
+    .player-toggle-btn { background: #ffffff; border: none; color: #020203; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+
+  <div id="bg-layer"></div>
+  <div class="overlay"></div>
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="container">
+    <div class="main-wrapper">
+      <div class="header-text">
+        <h1 class="title-large" id="txt-large">...</h1>
+        <p class="title-small" id="txt-small">...</p>
+      </div>
+
+      <div class="logo-box" id="logo-box">
+        <img id="img-logo" src="" alt="Logo" class="logo-img" style="display: none;" crossorigin="anonymous">
+        <i id="icon-logo" class="" style="display: none;"></i>
+      </div>
+
+      <div class="btn-container">
+        <a href="member.html" class="btn-main-primary">
+          <span id="btn1-text">SNOWALLSTAR</span>
+          <span class="sub-text" id="btn1-sub">MEMBER ZONE</span>
+        </a>
+
+        <div class="btn-sub-grid">
+          <a href="member2.html" class="btn-main-secondary"><span id="btn2-text">SNOWONSTYLE</span><span class="sub-text" id="btn2-sub">ZONE</span></a>
+          <a href="member3.html" class="btn-main-secondary"><span id="btn3-text">MIDAIPRO</span><span class="sub-text" id="btn3-sub">ZONE</span></a>
+          <a href="member4.html" class="btn-main-secondary"><span id="btn4-text">RADUBJUKKRAPHAT</span><span class="sub-text" id="btn4-sub">ZONE</span></a>
+          <a href="member5.html" class="btn-main-secondary"><span id="btn5-text">KING GHIDORAH</span><span class="sub-text" id="btn5-sub">ZONE</span></a>
+          <a href="member6.html" class="btn-main-secondary"><span id="btn6-text">Onstar</span><span class="sub-text" id="btn6-sub">ZONE</span></a>
+          <a href="member7.html" class="btn-main-secondary"><span id="btn7-text">X‘three / XIII</span><span class="sub-text" id="btn7-sub">ZONE</span></a>
+        </div>
+      </div>
+
+      <a href="https://qaqenqcstudio.vercel.app/" target="_blank" class="contact-link">
+        <i class="fa-regular fa-comment-dots"></i> ติดต่อทำเว็บ
+      </a>
+    </div>
+
+    <div class="footer-wrapper">
+      <div class="footer-text">SYSTEM DESIGN BY QA QEN</div>
+      <button class="btn-admin-trigger" onclick="openAdminModal()"><i class="fa-solid fa-lock"></i> Admin Panel</button>
+    </div>
+  </div>
+
+  <div id="admin-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 class="modal-title">ADMIN ACCESS</h3>
+      <div class="input-group"><label>EMAIL ADDRESS</label><input type="email" id="admin-email" class="input-field"></div>
+      <div class="input-group"><label>PASSWORD</label><input type="password" id="admin-password" class="input-field"></div>
+      <button class="btn-login" onclick="handleAdminLogin()">LOG IN</button>
+      <button style="background:transparent; border:none; color:#888; margin-top:10px; cursor:pointer;" onclick="closeAdminModal()">CANCEL</button>
+    </div>
+  </div>
+
+  <audio id="bg-audio" loop preload="auto"><source id="audio-source" src="" type="audio/mpeg"></audio>
+
+  <div class="audio-player-box">
+    <div id="player-disc" class="player-disc"></div>
+    <div class="player-info">
+      <a id="player-music-link" href="#" target="_blank" class="player-title">กำลังโหลด...</a>
+      <div class="player-status-wrapper">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="player-status-text" class="player-status">STOPPED</span>
+      </div>
+    </div>
+    <div class="volume-box">
+      <i class="fa-solid fa-volume-high" style="font-size:0.6rem; color:#aaa;"></i>
+      <input type="range" id="volume-slider" class="volume-slider" min="0" max="1" step="0.01" value="0.2">
+    </div>
+    <button id="player-btn" class="player-toggle-btn"><i id="player-icon" class="fa-solid fa-play"></i></button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    const MUSIC_CONFIG = {
+      songTitle: "LOVE ME HARDER OVERLAPPED TIKTOK REMIX - ARIANA GRANDE, THE WEEKND (looped, slight slow/reverb)",
+      originalUrl: "https://youtu.be/1JEy4VkGYmk?si=UDm9zWdpnb2IA1Xg",
+      musicFile: "music.mp3"
+    };
+
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class WhiteParticle {
+      constructor() { this.reset(true); }
+      reset(initial = false) {
+        this.x = Math.random() * canvas.width;
+        this.y = initial ? Math.random() * canvas.height : canvas.height + 10;
+        this.radius = Math.random() * 1.8 + 0.5;
+        this.speedY = Math.random() * 0.4 + 0.15;
+        this.speedX = (Math.random() - 0.5) * 0.2;
+        this.opacity = Math.random() * 0.6 + 0.1;
+      }
+      update() { 
+        this.y -= this.speedY; 
+        this.x += this.speedX;
+        if (this.y < -10 || this.x < 0 || this.x > canvas.width) this.reset(false); 
+      }
+      draw() {
+        ctx.beginPath(); 
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${this.opacity})`; 
+        ctx.shadowBlur = 6; ctx.shadowColor = '#ffffff';
+        ctx.fill(); ctx.shadowBlur = 0;
+      }
+    }
+    for (let i = 0; i < 45; i++) particles.push(new WhiteParticle());
+    function animateParticles() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
+    animateParticles();
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCFAJqW44-Y_aHECz1GpJGckwjKn2SiX90",
+      authDomain: "snowallstar-dc575.firebaseapp.com",
+      projectId: "snowallstar-dc575",
+      storageBucket: "snowallstar-dc575.firebasestorage.app",
+      messagingSenderId: "829525776984",
+      appId: "1:829525776984:web:8e0185d9646c03581bc82d"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // ดึงข้อมูลการตั้งค่าหน้า Index แบบ Realtime (รองรับการอัปเดตจาก Admin ทันที)
+    db.collection("settings").doc("index_page").onSnapshot((doc) => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.titleLarge) document.getElementById('txt-large').innerText = data.titleLarge;
+        if (data.titleSmall) document.getElementById('txt-small').innerText = data.titleSmall;
+        
+        // จัดการรูปภาพ Background (ตรวจสอบช่องว่างและใส่ Quotation ครอบให้ถูกต้อง)
+        if (data.bgUrl && data.bgUrl.trim() !== "") {
+          document.getElementById('bg-layer').style.backgroundImage = `url('${data.bgUrl.trim()}')`;
+        }
+        
+        if (data.siteIcon && data.siteIcon.trim() !== "") {
+          document.getElementById('site-favicon').href = data.siteIcon.trim();
+        }
+
+        const logoBox = document.getElementById('logo-box');
+        const imgLogo = document.getElementById('img-logo');
+        const iconLogo = document.getElementById('icon-logo');
+
+        if (data.logoUrl && data.logoUrl.trim() !== "") {
+          imgLogo.src = data.logoUrl.trim(); 
+          imgLogo.style.display = 'block'; 
+          iconLogo.style.display = 'none'; 
+          logoBox.style.display = 'flex';
+        } else if (data.logoIcon && data.logoIcon.trim() !== "") {
+          iconLogo.className = data.logoIcon.trim() + ' logo-icon'; 
+          iconLogo.style.display = 'block'; 
+          imgLogo.style.display = 'none'; 
+          logoBox.style.display = 'flex';
+        } else {
+          logoBox.style.display = 'none';
+        }
+
+        for (let i = 1; i <= 7; i++) {
+          if (data[`btn${i}_text`]) document.getElementById(`btn${i}-text`).innerText = data[`btn${i}_text`];
+          if (data[`btn${i}_sub`]) document.getElementById(`btn${i}-sub`).innerText = data[`btn${i}_sub`];
+        }
+      }
+    });
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const audio = document.getElementById("bg-audio");
+      const audioSource = document.getElementById("audio-source");
+      const playerTitle = document.getElementById("player-music-link");
+      const playerStatus = document.getElementById("player-status-text");
+      const statusDot = document.getElementById("status-dot");
+      const playerBtn = document.getElementById("player-btn");
+      const playerIcon = document.getElementById("player-icon");
+      const volumeSlider = document.getElementById("volume-slider");
+      const playerDisc = document.getElementById("player-disc");
+
+      audioSource.src = MUSIC_CONFIG.musicFile;
+      audio.load();
+      playerTitle.innerText = MUSIC_CONFIG.songTitle;
+      playerTitle.href = MUSIC_CONFIG.originalUrl;
+
+      audio.volume = 0.2;
+      volumeSlider.value = 0.2;
+
+      const savedTime = localStorage.getItem("music_time");
+      if (savedTime !== null) { audio.currentTime = parseFloat(savedTime); }
+      audio.addEventListener("timeupdate", () => { localStorage.setItem("music_time", audio.currentTime); });
+
+      function playMusic() {
+        audio.play().then(() => {
+          playerIcon.className = "fa-solid fa-pause";
+          playerStatus.innerText = "PLAYING";
+          statusDot.classList.add("active");
+          playerDisc.classList.add("playing");
+          sessionStorage.setItem("music_user_stopped", "false");
+        }).catch(() => {});
+      }
+
+      function pauseMusic() {
+        audio.pause();
+        playerIcon.className = "fa-solid fa-play";
+        playerStatus.innerText = "STOPPED";
+        statusDot.classList.remove("active");
+        playerDisc.classList.remove("playing");
+        sessionStorage.setItem("music_user_stopped", "true");
+      }
+
+      if (sessionStorage.getItem("music_user_stopped") !== "true") {
+        playMusic();
+        const startOnInteraction = (e) => {
+          if (e.target.closest('#player-btn') || e.target.closest('#volume-slider') || e.target.closest('#admin-modal')) return;
+          if (audio.paused) playMusic();
+          document.removeEventListener("click", startOnInteraction);
+        };
+        document.addEventListener("click", startOnInteraction);
+      }
+
+      playerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (audio.paused) playMusic(); else pauseMusic();
+      });
+
+      volumeSlider.addEventListener("input", (e) => { audio.volume = parseFloat(e.target.value); });
+    });
+
+    function openAdminModal() { document.getElementById('admin-modal').style.display = 'flex'; }
+    function closeAdminModal() { document.getElementById('admin-modal').style.display = 'none'; }
+    function handleAdminLogin() {
+      const email = document.getElementById('admin-email').value;
+      const pass = document.getElementById('admin-password').value;
+      firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(() => { window.location.href = "admin.html"; })
+        .catch(err => alert("เข้าสู่ระบบไม่สำเร็จ: " + err.message));
+    }
+  </script>
+</body>
+</html>
