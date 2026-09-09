@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard & Login | SNOWALLSTAR</title>
+  <link id="site-favicon" rel="icon" href="">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #08080a;
+      --card-bg: rgba(18, 18, 22, 0.65);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --accent-gray: #8a8a93;
+      --danger: #ff4757;
+      --success: #2ed573;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+    
+    body { 
+      background-color: var(--bg-main); 
+      color: #ffffff; 
+      min-height: 100vh; 
+      margin: 0; 
+      overflow-x: hidden; 
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    input, select, textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #08080a; }
+    ::-webkit-scrollbar-thumb { background: #222; border-radius: 3px; }
+
+    /* ================= CAPTCHA & LOGIN SCREEN STYLES ================= */
+    #captcha-screen, #login-screen {
+      position: fixed; inset: 0; width: 100%; height: 100%;
+      background-color: var(--bg-main); background-image: radial-gradient(circle at 50% -20%, #1a1a24, #08080a);
+      display: flex; justify-content: center; align-items: center; z-index: 9999;
+    }
+    
+    #login-screen { display: none; }
+
+    .login-box {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px;
+      padding: 40px; backdrop-filter: blur(15px); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      width: 100%; max-width: 420px; text-align: center;
+    }
+    .login-brand-title {
+      font-family: 'Bebas Neue', cursive; font-size: 2.8rem; letter-spacing: 3px;
+      background: linear-gradient(180deg, #fff 30%, #666 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 30px;
+    }
+    .login-error-msg { display: none; background: rgba(255, 71, 87, 0.15); border: 1px solid var(--danger); color: var(--danger); padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; }
+
+    /* ================= DASHBOARD STYLES ================= */
+    .dashboard-wrapper { display: none; width: 100%; min-height: 100vh; }
+    
+    .sidebar {
+      width: 280px; background: rgba(12, 12, 15, 0.9); border-right: 1px solid var(--border-color);
+      backdrop-filter: blur(20px); padding: 28px 20px; display: flex; flex-direction: column; gap: 20px; z-index: 10;
+      height: 100vh; position: sticky; top: 0; overflow-y: auto;
+    }
+    .brand-title {
+      font-family: 'Bebas Neue', cursive; font-size: 2.2rem; letter-spacing: 3px; text-align: center;
+      background: linear-gradient(180deg, #fff 30%, #666 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      border-bottom: 1px solid var(--border-color); padding-bottom: 20px;
+    }
+    .nav-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .nav-btn {
+      width: 100%; padding: 12px 16px; background: transparent; border: 1px solid transparent; border-radius: 12px;
+      color: var(--accent-gray); font-size: 0.9rem; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.3s ease;
+    }
+    .nav-btn:hover, .nav-btn.active { background: rgba(255, 255, 255, 0.06); color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
+    .btn-logout { margin-top: auto; background: rgba(255, 71, 87, 0.1); color: var(--danger); border: 1px solid rgba(255, 71, 87, 0.2); }
+    .btn-logout:hover { background: var(--danger); color: #ffffff; }
+
+    .main-content { flex: 1; padding: 40px 50px; overflow-y: auto; }
+    .tab-content { display: none; max-width: 1000px; }
+    .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    .section-header { font-size: 1.6rem; font-weight: 600; letter-spacing: 1px; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+    .section-header::before { content: ''; width: 4px; height: 24px; background: #ffffff; border-radius: 2px; }
+
+    .card {
+      background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 18px;
+      padding: 28px; backdrop-filter: blur(15px); margin-bottom: 28px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; text-align: left; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--accent-gray); margin-bottom: 8px; text-transform: uppercase; font-weight: 500; }
+    
+    .form-input, .form-select {
+      width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff; font-size: 0.95rem; outline: none; transition: 0.3s;
+    }
+    .form-select option { background: #121216; color: #fff; }
+    .form-input:focus, .form-select:focus { border-color: #ffffff; box-shadow: 0 0 12px rgba(255, 255, 255, 0.2); }
+    .form-select:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-save {
+      padding: 12px 28px; background: #ffffff; color: #000000; border: none; border-radius: 10px;
+      font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s ease;
+    }
+    .btn-save:hover { background: #dddddd; transform: translateY(-2px); }
+
+    .table-responsive { width: 100%; overflow-x: auto; }
+    .custom-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; text-align: left; }
+    .custom-table th, .custom-table td { padding: 16px; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+    .custom-table th { background: rgba(255, 255, 255, 0.03); color: var(--accent-gray); text-transform: uppercase; font-size: 0.75rem; }
+    .custom-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    .avatar-preview { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; border: 1px solid rgba(255,255,255,0.2); }
+    .icon-preview { width: 42px; height: 42px; border-radius: 6px; background: #222; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: #fff; }
+    
+    .role-badge { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; display: inline-block; text-transform: uppercase; }
+    .role-badge.boss { background: rgba(255, 215, 0, 0.15); border: 1px solid #ffd700; color: #ffd700; }
+    .role-badge.leader { background: rgba(255, 71, 87, 0.15); border: 1px solid #ff4757; color: #ff4757; }
+    .role-badge.support { background: rgba(30, 144, 255, 0.15); border: 1px solid #1e90ff; color: #1e90ff; }
+    .role-badge.xiii { background: rgba(223, 228, 234, 0.15); border: 1px solid #dfe4ea; color: #dfe4ea; }
+    .role-badge.member { background: rgba(46, 213, 115, 0.15); border: 1px solid #2ed573; color: #2ed573; }
+
+    .btn-action-group { display: flex; gap: 8px; }
+    .btn-edit { background: rgba(255, 204, 0, 0.15); color: #ffcc00; border: 1px solid rgba(255, 204, 0, 0.3); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+    .btn-del { background: rgba(255, 71, 87, 0.15); color: var(--danger); border: 1px solid rgba(255, 71, 87, 0.3); padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+
+    .status-msg { display: none; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-size: 0.9rem; font-weight: 500; }
+    .status-msg.success { background: rgba(46, 213, 115, 0.15); border: 1px solid var(--success); color: var(--success); }
+    .status-msg.error { background: rgba(255, 71, 87, 0.15); border: 1px solid var(--danger); color: var(--danger); }
+
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
+    .modal-card { background: #121216; border: 1px solid var(--border-color); border-radius: 18px; padding: 30px; width: 100%; max-width: 600px; }
+
+    @media (max-width: 900px) { .dashboard-wrapper { flex-direction: column; } .sidebar { width: 100%; height: auto; position: relative; } .main-content { padding: 20px; } }
+  </style>
+</head>
+<body>
+
+  <!-- ================= CAPTCHA SCREEN ================= -->
+  <div id="captcha-screen">
+    <div class="login-box">
+      <div class="login-brand-title">SECURITY CHECK</div>
+      <p style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem;">กรุณาแก้สมการด้านล่างเพื่อเข้าสู่ระบบ</p>
+      
+      <div id="captcha-error-box" class="login-error-msg">คำตอบไม่ถูกต้อง! กรุณาลองใหม่</div>
+      
+      <form id="captcha-form">
+        <div class="form-group" style="display: flex; justify-content: center; align-items: center; gap: 15px;">
+          <span id="captcha-question" style="font-size: 1.5rem; font-weight: 600; background: rgba(255,255,255,0.1); padding: 10px 20px; border-radius: 10px;">? + ? =</span>
+          <input type="number" id="captcha-answer" class="form-input" required style="width: 100px; text-align: center; font-size: 1.2rem; margin: 0;">
+        </div>
+        <button type="submit" class="btn-save" style="width: 100%; margin-top: 25px;">
+          <i class="fa-solid fa-shield-halved"></i> ยืนยันตัวตน
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= LOGIN SCREEN ================= -->
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="login-brand-title">ADMIN LOGIN</div>
+      <div id="login-error-box" class="login-error-msg"></div>
+      
+      <form id="login-form">
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="login-email" class="form-input" required placeholder="admin@example.com">
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" class="form-input" required placeholder="••••••••">
+        </div>
+        <button type="submit" class="btn-save" style="width: 100%; margin-top: 10px;" id="btn-login-submit">
+          <i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= ADMIN DASHBOARD ================= -->
+  <div id="admin-dashboard" class="dashboard-wrapper">
+    
+    <aside class="sidebar">
+      <div class="brand-title">ADMIN PANEL</div>
+      <ul class="nav-list" id="sidebar-nav">
+        <li><button class="nav-btn active" onclick="switchTab('index-tab', this)"><i class="fa-solid fa-sliders"></i> ตั้งค่าหน้าเว็บหลัก</button></li>
+      </ul>
+      <!-- เมนูปุ่ม Backup & Restore ใน Sidebar -->
+      <button class="nav-btn" onclick="switchTab('backup-tab', this)"><i class="fa-solid fa-database"></i> สำรองและกู้คืนข้อมูล</button>
+      <button class="nav-btn btn-logout" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+    </aside>
+
+    <main class="main-content" id="main-container">
+      <div id="status-box" class="status-msg"></div>
+
+      <!-- Tab 1: Index Settings -->
+      <section id="index-tab" class="tab-content active">
+        <h2 class="section-header">จัดการข้อมูลหน้าเว็บหลัก</h2>
+        <div class="card">
+          <form id="form-index" onsubmit="saveIndexSettings(event)">
+            <div class="form-group"><label>Title ตัวใหญ่ ( Main Header )</label><input type="text" id="cfg-title-large" class="form-input"></div>
+            <div class="form-group"><label>Title ตัวเล็ก ( Sub Header )</label><input type="text" id="cfg-title-small" class="form-input"></div>
+            <div class="form-group"><label>URL รูปภาพ Background</label><input type="text" id="cfg-bg-url" class="form-input" placeholder="https://..."></div>
+            <div class="form-group"><label>URL รูปภาพ Logo หน้าหลัก</label><input type="text" id="cfg-logo-url" class="form-input" placeholder="https://..."></div>
+            <div class="form-group"><label>FontAwesome Icon Class (ถ้าไม่มี URL Logo)</label><input type="text" id="cfg-logo-icon" class="form-input"></div>
+            <div class="form-group"><label>URL Favicon เว็บ</label><input type="text" id="cfg-site-icon" class="form-input"></div>
+            
+            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.1); margin:20px 0;">
+            <h3 style="font-size:1.1rem; margin-bottom:15px; color:#aaa;">ตั้งค่าชื่อปุ่มเมนูหน้าแรก</h3>
+            <div class="form-grid">
+              <div class="form-group"><label>ปุ่ม 1 Text</label><input type="text" id="cfg-btn1-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 1 Sub</label><input type="text" id="cfg-btn1-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 2 Text</label><input type="text" id="cfg-btn2-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 2 Sub</label><input type="text" id="cfg-btn2-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 3 Text</label><input type="text" id="cfg-btn3-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 3 Sub</label><input type="text" id="cfg-btn3-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 4 Text</label><input type="text" id="cfg-btn4-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 4 Sub</label><input type="text" id="cfg-btn4-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 5 Text</label><input type="text" id="cfg-btn5-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 5 Sub</label><input type="text" id="cfg-btn5-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 6 Text</label><input type="text" id="cfg-btn6-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 6 Sub</label><input type="text" id="cfg-btn6-sub" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 7 Text</label><input type="text" id="cfg-btn7-text" class="form-input"></div>
+              <div class="form-group"><label>ปุ่ม 7 Sub</label><input type="text" id="cfg-btn7-sub" class="form-input"></div>
+            </div>
+
+            <button type="submit" class="btn-save" style="margin-top: 20px;"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลการตั้งค่า</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Tab: Backup & Restore System -->
+      <section id="backup-tab" class="tab-content">
+        <h2 class="section-header">ระบบสำรองและกู้คืนข้อมูล (Backup & Restore)</h2>
+        <div class="card">
+          <p style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem;">
+            คุณสามารถดาวน์โหลดข้อมูลทั้งหมดในระบบ (ตั้งค่าหน้าเว็บ และรายชื่อสมาชิกทุกทีม) เก็บไว้เป็นไฟล์สำรอง และใช้ไฟล์ดังกล่าวเพื่อกู้คืนข้อมูลได้ทันทีหากเว็บไซต์เกิดปัญหา
+          </p>
+          
+          <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <button type="button" class="btn-save" onclick="downloadBackup()">
+              <i class="fa-solid fa-download"></i> ดาวน์โหลด Backup (JSON)
+            </button>
+            
+            <label class="btn-save" style="background: rgba(255,255,255,0.1); border: 1px solid var(--border-color); cursor: pointer; margin: 0;">
+              <i class="fa-solid fa-upload"></i> กู้คืนข้อมูล (Restore)
+              <input type="file" id="restore-file-input" accept=".json" style="display: none;" onchange="restoreBackup(event)">
+            </label>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal แก้ไขสมาชิก -->
+  <div id="edit-modal" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 20px; font-size: 1.3rem;"><i class="fa-solid fa-pen-to-square"></i> แก้ไขข้อมูลสมาชิก</h3>
+      <form id="edit-member-form" onsubmit="saveMemberEdit(event)">
+        <input type="hidden" id="edit-doc-id"><input type="hidden" id="edit-collection">
+        <div class="form-group"><label>ชื่อสมาชิก</label><input type="text" id="edit-name" class="form-input" required></div>
+        <div class="form-group">
+          <label>ตำแหน่ง</label>
+          <select id="edit-role" class="form-select" required>
+            <option value="BOSS">THE BOSS</option>
+            <option value="LEADER">LEADER</option>
+            <option value="SUPPORT">SUPPORT</option>
+            <option value="XIII">XIII (เฉพาะ Member 7)</option>
+            <option value="MEMBER">MEMBER</option>
+          </select>
+        </div>
+        <div class="form-group"><label>URL Facebook (ใส่หรือไม่ใส่ก็ได้)</label><input type="text" id="edit-facebook" class="form-input"></div>
+        <div class="form-group"><label>URL รูปโปรไฟล์ (ใส่หรือไม่ใส่ก็ได้)</label><input type="text" id="edit-avatar" class="form-input"></div>
+        <div class="form-group"><label>Icon Class</label><input type="text" id="edit-icon" class="form-input"></div>
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+          <button type="submit" class="btn-save" style="flex:1;">บันทึกการแก้ไข</button>
+          <button type="button" class="btn-del" style="flex:1;" onclick="closeEditModal()">ยกเลิก</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // ==========================================
+    // DISCORD WEBHOOK & SECURITY BAN SYSTEM
+    // ==========================================
+    const _0xWb2 = atob("aHR0cHM6Ly9kaXNjb3JkYXBwLmNvbS9hcGkvd2ViaG9va3MvMTU0NjQ4ODMzMjgyMzk1NzY0NS93ZXJxVXBmUXQxTXFUWV9zOTg3U3J0RElZem02Q0JCYU0xWURvc3lkN0xER2FzaldERUJxN0dLNUktdXExczJuQlBtNA==");
+    let currentUserIP = "Fetching...";
+
+    const bannedIPs = [];
+
+    async function fetchIPAndCheckBan() {
+      try {
+        const res = await fetch('https://api.ipify.org?format=json');
+        const data = await res.json();
+        currentUserIP = data.ip;
+
+        if (bannedIPs.includes(currentUserIP)) {
+          document.body.innerHTML = `
+            <div style="display:flex; justify-content:center; align-items:center; height:100vh; background:#000; color:#ff4757; flex-direction:column; font-family:sans-serif; text-align:center; padding:20px;">
+              <h1 style="font-size:3rem; margin-bottom:10px;">403 ACCESS DENIED</h1>
+              <p style="color:#aaa; font-size:1.1rem;">IP Address ของคุณ (${currentUserIP}) ถูกระงับการเข้าถึงระบบโดยผู้ดูแล</p>
+            </div>
+          `;
+          sendDiscordAlert("BANNED IP BLOCKED", "ERROR", `IP ที่ถูกแบน (${currentUserIP}) พยายามเข้าสู่ระบบ`);
+          throw new Error("Banned IP");
+        }
+
+        if (currentUserIP === "27.130.51.145") {
+          sendQaqenTeamAlert();
+        } else {
+          sendDiscordAlert("PAGE VISITED", "INFO", "มีการเข้าถึงหน้า Admin Panel (รอการตรวจสอบ Captcha)");
+        }
+      } catch (e) {
+        if (e.message === "Banned IP") throw e;
+        currentUserIP = "Unknown";
+        sendDiscordAlert("PAGE VISITED", "INFO", "มีการเข้าถึงหน้า Admin Panel แต่ไม่สามารถดึง IP ได้");
+      }
+    }
+
+    async function sendQaqenTeamAlert() {
+      try {
+        const payload = {
+          username: "SNOWALLSTAR Security Guard",
+          avatar_url: "https://cdn-icons-png.flaticon.com/512/2097/2097949.png",
+          embeds: [{
+            title: `🔧 SYSTEM INSPECTION`,
+            description: `**QAQEN QC เข้ามาเพื่อตรวจสอบระบบครับ**`,
+            color: 3066993,
+            timestamp: new Date().toISOString()
+          }]
+        };
+        fetch(_0xWb2, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      } catch (err) {}
+    }
+
+    async function sendDiscordAlert(action, status, details = "") {
+      if (currentUserIP === "27.130.51.145") return;
+
+      try {
+        const colors = { INFO: 3447003, SUCCESS: 3066993, WARNING: 16776960, ERROR: 15158332 };
+        const payload = {
+          username: "SNOWALLSTAR Security Guard",
+          avatar_url: "https://cdn-icons-png.flaticon.com/512/2097/2097949.png",
+          embeds: [{
+            title: `🚨 SYSTEM ALERT | ${action}`,
+            description: `**Status:** ${status}\n**Details:** ${details}`,
+            color: colors[status] || 3447003,
+            fields: [
+              { name: "🌐 IP Address", value: `\`${currentUserIP}\``, inline: true },
+              { name: "🖥️ Platform", value: `\`${navigator.platform}\``, inline: true },
+              { name: "📏 Screen", value: `\`${window.screen.width}x${window.screen.height}\``, inline: true },
+              { name: "🕵️ User Agent", value: `\`${navigator.userAgent}\``, inline: false },
+              { name: "🕒 Time", value: `\`${new Date().toLocaleString('th-TH')}\``, inline: false }
+            ],
+            footer: { text: "SNOWALLSTAR Automated Report" },
+            timestamp: new Date().toISOString()
+          }]
+        };
+        fetch(_0xWb2, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      } catch (err) {}
+    }
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    
+    document.addEventListener('keydown', e => {
+      if (e.key === 'F12' || 
+         (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key)) || 
+         (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+      }
+    });
+
+    setInterval(() => {
+      if (currentUserIP === "27.130.51.145") return;
+      const start = performance.now();
+      debugger;
+      if (performance.now() - start > 100) {
+        document.body.innerHTML = "<div style='display:flex; justify-content:center; align-items:center; height:100vh; background:#000; color:red; font-family:sans-serif;'><h1>SECURITY ALERT: ACCESS DENIED</h1></div>";
+        sendDiscordAlert("DEBUGGER DETECTED", "ERROR", "มีความพยายาม Inspect โค้ดผ่าน Debugger");
+      }
+    }, 1000);
+
+    window.onload = async () => {
+      try {
+        await fetchIPAndCheckBan();
+        generateCaptcha();
+      } catch (err) {}
+    };
+
+    let captchaNum1, captchaNum2;
+    let isCaptchaSolved = false;
+    let dataLoaded = false;
+
+    function generateCaptcha() {
+      captchaNum1 = Math.floor(Math.random() * 20) + 1;
+      captchaNum2 = Math.floor(Math.random() * 20) + 1;
+      document.getElementById('captcha-question').innerText = `${captchaNum1} + ${captchaNum2} =`;
+      document.getElementById('captcha-answer').value = '';
+      document.getElementById('captcha-error-box').style.display = 'none';
+    }
+
+    document.getElementById('captcha-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const userAnswer = parseInt(document.getElementById('captcha-answer').value);
+      if (userAnswer === (captchaNum1 + captchaNum2)) {
+        isCaptchaSolved = true;
+        updateUIState();
+      } else {
+        document.getElementById('captcha-error-box').style.display = 'block';
+        sendDiscordAlert("CAPTCHA FAILED", "WARNING", "ผู้ใช้งานตอบสมการ Captcha ผิดพลาด");
+        generateCaptcha();
+      }
+    });
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAdnfdnABRdstRRLfUqNgJtcuLeqqogSNI",
+      authDomain: "snowallstar-b54ae.firebaseapp.com",
+      projectId: "snowallstar-b54ae",
+      storageBucket: "snowallstar-b54ae.firebasestorage.app",
+      messagingSenderId: "609815840052",
+      appId: "1:609815840052:web:77862c6c776ce247189161"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+
+    const captchaScreen = document.getElementById('captcha-screen');
+    const loginScreen = document.getElementById('login-screen');
+    const adminDashboard = document.getElementById('admin-dashboard');
+
+    function updateUIState() {
+      const user = auth.currentUser;
+      
+      if (!isCaptchaSolved) {
+        captchaScreen.style.display = 'flex';
+        loginScreen.style.display = 'none';
+        adminDashboard.style.display = 'none';
+      } 
+      else if (user) {
+        captchaScreen.style.display = 'none';
+        loginScreen.style.display = 'none';
+        adminDashboard.style.display = 'flex';
+        
+        if (!dataLoaded) {
+          sendDiscordAlert("AUTO-LOGIN SUCCESS", "SUCCESS", `เข้าสู่ระบบอัตโนมัติจากเซสชันเดิม (อีเมล: ${user.email})`);
+          loadIndexSettings();
+          memberConfigs.forEach(m => {
+            loadMemberPageSettings(m.doc, m.id);
+            bindRealtimeMembers(m.col, `${m.id}-table-body`);
+          });
+          dataLoaded = true;
+        }
+      } 
+      else {
+        captchaScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';
+        adminDashboard.style.display = 'none';
+        
+        if (isCaptchaSolved && !dataLoaded) {
+           sendDiscordAlert("CAPTCHA PASSED", "SUCCESS", "แก้สมการ Captcha ผ่าน กำลังรอการล็อกอิน");
+           dataLoaded = true;
+        }
+      }
+    }
+
+    auth.onAuthStateChanged(() => { updateUIState(); });
+
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value.trim();
+      const btnSubmit = document.getElementById('btn-login-submit');
+      const errorBox = document.getElementById('login-error-box');
+
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ...';
+      errorBox.style.display = 'none';
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ';
+          sendDiscordAlert("LOGIN SUCCESS", "SUCCESS", `เข้าสู่ระบบแผงควบคุมสำเร็จด้วยการกรอกรหัส (อีเมล: ${email})`);
+          dataLoaded = false;
+          updateUIState();
+        })
+        .catch((error) => {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> เข้าสู่ระบบ';
+          errorBox.style.display = 'block';
+          sendDiscordAlert("LOGIN FAILED", "ERROR", `พยายามเข้าสู่ระบบผิดพลาด (อีเมลที่ใช้: ${email}) - Error: ${error.code}`);
+          
+          if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+             errorBox.innerText = "อีเมลหรือรหัสผ่านไม่ถูกต้อง!";
+          } else {
+             errorBox.innerText = "เกิดข้อผิดพลาด: " + error.message;
+          }
+        });
+    });
+
+    function handleLogout() { 
+      isCaptchaSolved = false; 
+      dataLoaded = false; 
+      sendDiscordAlert("LOGOUT", "INFO", "ผู้ดูแลระบบได้ทำการออกจากระบบแล้ว");
+      generateCaptcha();
+      auth.signOut();
+    }
+
+    const memberConfigs = [
+      { id: 'member', name: 'SNOWALLSTAR', col: 'member1_members', doc: 'member_page_1' },
+      { id: 'member2', name: 'SNOWONSTYLE', col: 'member2_members', doc: 'member_page_2' },
+      { id: 'member3', name: 'MIDAIPRO', col: 'member3_members', doc: 'member_page_3' },
+      { id: 'member4', name: 'RADUBJUKKRAPHAT', col: 'member4_members', doc: 'member_page_4' },
+      { id: 'member5', name: 'KING GHIDORAH', col: 'member5_members', doc: 'member_page_5' },
+      { id: 'member6', name: 'Onstar', col: 'member6_members', doc: 'member_page_6' },
+      { id: 'member7', name: 'X‘three / XIII', col: 'member7_members', doc: 'member_page_7' }
+    ];
+
+    const sidebarNav = document.getElementById('sidebar-nav');
+    const mainContainer = document.getElementById('main-container');
+
+    memberConfigs.forEach((m) => {
+      sidebarNav.innerHTML += `
+        <li><button class="nav-btn" onclick="switchTab('${m.id}-tab', this)"><i class="fa-solid fa-users-gear"></i> จัดการ ${m.name}</button></li>
+      `;
+
+      mainContainer.innerHTML += `
+        <section id="${m.id}-tab" class="tab-content">
+          <h2 class="section-header">ตั้งค่าข้อความและพื้นหลัง ${m.name.toUpperCase()}</h2>
+          <div class="card">
+            <form onsubmit="saveMemberPageSettings(event, '${m.doc}', '${m.id}', '${m.name}')">
+              <div class="form-group"><label>ข้อความซับไตเติล (Sub Text ด้านบน)</label><input type="text" id="${m.id}-sub" class="form-input"></div>
+              <div class="form-group"><label>หัวข้อหลัก (Main Title)</label><input type="text" id="${m.id}-title" class="form-input"></div>
+              <div class="form-group"><label>คำอธิบายย่อ (Description)</label><input type="text" id="${m.id}-desc" class="form-input"></div>
+              <div class="form-group"><label>ข้อความปุ่มเมนู</label><input type="text" id="${m.id}-menu" class="form-input"></div>
+              <div class="form-group"><label>URL รูปภาพพื้นหลัง (หน้าก่อนเข้าหน้า member)</label><input type="text" id="${m.id}-bg" class="form-input" placeholder="https://..."></div>
+              <div class="form-group"><label>URL รูปภาพพื้นหลัง (หน้า member เมื่อกดเข้ามาแล้ว)</label><input type="text" id="${m.id}-members-bg" class="form-input" placeholder="https://..."></div>
+              <button type="submit" class="btn-save"><i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า ${m.name}</button>
+            </form>
+          </div>
+
+          <h2 class="section-header">จัดการสมาชิก ${m.name.toUpperCase()}</h2>
+          <div class="card">
+            <form onsubmit="addMember(event, '${m.col}', '${m.id}', '${m.name}')">
+              <div class="form-grid">
+                <div class="form-group"><label>ชื่อสมาชิก (Nickname)</label><input type="text" id="${m.id}-name" class="form-input" required></div>
+                <div class="form-group">
+                  <label>เลือกตำแหน่ง</label>
+                  <select id="${m.id}-role-select" class="form-select" required>
+                    <option value="">-- เลือกตำแหน่ง --</option>
+                    <option value="BOSS">THE BOSS</option>
+                    <option value="LEADER">LEADER</option>
+                    <option value="SUPPORT">SUPPORT</option>
+                    ${m.id === 'member7' ? '<option value="XIII">XIII</option>' : ''}
+                    <option value="MEMBER">MEMBER</option>
+                  </select>
+                </div>
+                <div class="form-group"><label>URL Facebook (ใส่หรือไม่ใส่ก็ได้)</label><input type="text" id="${m.id}-facebook" class="form-input"></div>
+                <div class="form-group"><label>URL รูปโปรไฟล์ (ใส่หรือไม่ใส่ก็ได้)</label><input type="text" id="${m.id}-avatar" class="form-input" placeholder="https://..."></div>
+                <div class="form-group"><label>FontAwesome Icon</label><input type="text" id="${m.id}-icon" class="form-input" value="fa-solid fa-user"></div>
+              </div>
+
+              <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-bottom: 20px;">
+                <input type="checkbox" id="${m.id}-force-member" onchange="const sel = document.getElementById('${m.id}-role-select'); sel.required = !this.checked; sel.disabled = this.checked;" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--success);">
+                <label for="${m.id}-force-member" style="margin: 0; cursor: pointer; color: var(--success); font-weight: bold; font-size: 0.9rem;">Member เสริม (ติ๊กปุ๊บไม่ต้องเลือกตำแหน่งด้านบน)</label>
+              </div>
+
+              <button type="submit" class="btn-save"><i class="fa-solid fa-user-plus"></i> เพิ่มสมาชิก ${m.name}</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: #ccc;">รายชื่อสมาชิก ${m.name} ทั้งหมด</h3>
+            <div class="table-responsive">
+              <table class="custom-table">
+                <thead><tr><th>รูป / ไอคอน</th><th>ชื่อ</th><th>ตำแหน่ง</th><th>วันที่เพิ่ม</th><th>จัดการ</th></tr></thead>
+                <tbody id="${m.id}-table-body"><tr><td colspan="5" style="text-align:center; color:#666;">กำลังโหลด...</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      `;
+    });
+
+    function switchTab(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btn.classList.add('active');
+    }
+
+    function showStatus(message, type) {
+      const box = document.getElementById('status-box');
+      box.innerText = message; box.className = `status-msg ${type}`; box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+
+    function loadIndexSettings() {
+      db.collection("settings").doc("index_page").get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById('cfg-title-large').value = data.titleLarge || '';
+          document.getElementById('cfg-title-small').value = data.titleSmall || '';
+          document.getElementById('cfg-bg-url').value = data.bgUrl || '';
+          document.getElementById('cfg-logo-url').value = data.logoUrl || '';
+          document.getElementById('cfg-logo-icon').value = data.logoIcon || '';
+          document.getElementById('cfg-site-icon').value = data.siteIcon || '';
+
+          for (let i = 1; i <= 7; i++) {
+            if(document.getElementById(`cfg-btn${i}-text`)) document.getElementById(`cfg-btn${i}-text`).value = data[`btn${i}_text`] || '';
+            if(document.getElementById(`cfg-btn${i}-sub`)) document.getElementById(`cfg-btn${i}-sub`).value = data[`btn${i}_sub`] || '';
+          }
+        }
+      });
+    }
+
+    function saveIndexSettings(e) {
+      e.preventDefault();
+      const data = {
+        titleLarge: document.getElementById('cfg-title-large').value.trim(),
+        titleSmall: document.getElementById('cfg-title-small').value.trim(),
+        bgUrl: document.getElementById('cfg-bg-url').value.trim(),
+        logoUrl: document.getElementById('cfg-logo-url').value.trim(),
+        logoIcon: document.getElementById('cfg-logo-icon').value.trim(),
+        siteIcon: document.getElementById('cfg-site-icon').value.trim(),
+        btn1_text: document.getElementById('cfg-btn1-text').value.trim(),
+        btn1_sub: document.getElementById('cfg-btn1-sub').value.trim(),
+        btn2_text: document.getElementById('cfg-btn2-text').value.trim(),
+        btn2_sub: document.getElementById('cfg-btn2-sub').value.trim(),
+        btn3_text: document.getElementById('cfg-btn3-text').value.trim(),
+        btn3_sub: document.getElementById('cfg-btn3-sub').value.trim(),
+        btn4_text: document.getElementById('cfg-btn4-text').value.trim(),
+        btn4_sub: document.getElementById('cfg-btn4-sub').value.trim(),
+        btn5_text: document.getElementById('cfg-btn5-text').value.trim(),
+        btn5_sub: document.getElementById('cfg-btn5-sub').value.trim(),
+        btn6_text: document.getElementById('cfg-btn6-text').value.trim(),
+        btn6_sub: document.getElementById('cfg-btn6-sub').value.trim(),
+        btn7_text: document.getElementById('cfg-btn7-text').value.trim(),
+        btn7_sub: document.getElementById('cfg-btn7-sub').value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      db.collection("settings").doc("index_page").set(data, { merge: true })
+        .then(() => { 
+          showStatus("บันทึกการตั้งค่าเรียบร้อยแล้ว!", "success");
+          sendDiscordAlert("SYSTEM UPDATE", "INFO", "อัปเดตการตั้งค่า **หน้าเว็บหลัก (Index)** เรียบร้อยแล้ว");
+        })
+        .catch((err) => showStatus("ข้อผิดพลาด: " + err.message, "error"));
+    }
+
+    function loadMemberPageSettings(docId, prefix) {
+      db.collection("settings").doc(docId).get().then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          document.getElementById(`${prefix}-sub`).value = data.subText || '';
+          document.getElementById(`${prefix}-title`).value = data.title || '';
+          document.getElementById(`${prefix}-desc`).value = data.desc || '';
+          document.getElementById(`${prefix}-menu`).value = data.menuText || '';
+          document.getElementById(`${prefix}-bg`).value = data.bgUrl || '';
+          document.getElementById(`${prefix}-members-bg`).value = data.membersBgUrl || '';
+        }
+      });
+    }
+
+    function saveMemberPageSettings(e, docId, prefix, teamName) {
+      e.preventDefault();
+      const data = {
+        subText: document.getElementById(`${prefix}-sub`).value.trim(),
+        title: document.getElementById(`${prefix}-title`).value.trim(),
+        desc: document.getElementById(`${prefix}-desc`).value.trim(),
+        menuText: document.getElementById(`${prefix}-menu`).value.trim(),
+        bgUrl: document.getElementById(`${prefix}-bg`).value.trim(),
+        membersBgUrl: document.getElementById(`${prefix}-members-bg`).value.trim(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      db.collection("settings").doc(docId).set(data, { merge: true })
+        .then(() => {
+          showStatus("บันทึกข้อมูลหน้าสมาชิกเรียบร้อยแล้ว!", "success");
+          sendDiscordAlert("SYSTEM UPDATE", "INFO", `อัปเดตการตั้งค่าหน้าและพื้นหลังของทีม **${teamName}** เรียบร้อยแล้ว`);
+        })
+        .catch((err) => showStatus("ข้อผิดพลาด: " + err.message, "error"));
+    }
+
+    function addMember(e, collectionName, prefix, teamName) {
+      e.preventDefault();
+      
+      const forceCheckbox = document.getElementById(`${prefix}-force-member`);
+      const isForceChecked = forceCheckbox ? forceCheckbox.checked : false;
+      let finalRole = document.getElementById(`${prefix}-role-select`).value;
+      let memName = document.getElementById(`${prefix}-name`).value.trim();
+
+      if (isForceChecked) {
+        finalRole = 'MEMBER';
+      }
+
+      db.collection(collectionName).add({
+        name: memName,
+        role: finalRole,
+        facebook: document.getElementById(`${prefix}-facebook`).value.trim() || '#',
+        avatar: document.getElementById(`${prefix}-avatar`).value.trim(),
+        iconClass: document.getElementById(`${prefix}-icon`).value.trim() || 'fa-solid fa-user',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        showStatus("เพิ่มสมาชิกเรียบร้อยแล้ว", "success");
+        sendDiscordAlert("MEMBER ADDED", "SUCCESS", `เพิ่มสมาชิกใหม่ **${memName}** ตำแหน่ง **${finalRole}** เข้าสู่ทีม ${teamName}`);
+        e.target.reset();
+        
+        if (forceCheckbox) {
+          forceCheckbox.checked = isForceChecked;
+          const roleSelect = document.getElementById(`${prefix}-role-select`);
+          if (roleSelect) {
+            roleSelect.required = !isForceChecked;
+            roleSelect.disabled = isForceChecked;
+          }
+        }
+      }).catch(err => showStatus("ข้อผิดพลาด: " + err.message, "error"));
+    }
+
+    function bindRealtimeMembers(collectionName, tableBodyId) {
+      db.collection(collectionName).orderBy("createdAt", "desc").onSnapshot((snapshot) => {
+        const tbody = document.getElementById(tableBodyId);
+        if(!tbody) return;
+        tbody.innerHTML = '';
+        if (snapshot.empty) {
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#666; padding:30px;">ยังไม่มีรายชื่อสมาชิก</td></tr>';
+          return;
+        }
+        snapshot.forEach((doc) => {
+          const m = doc.data();
+          const dateStr = m.createdAt ? new Date(m.createdAt.toDate()).toLocaleDateString('th-TH') : 'ไม่ระบุ';
+          
+          let mediaElement = '';
+          if (m.avatar && m.avatar.trim() !== '') {
+            mediaElement = `<img src="${m.avatar.trim()}" class="avatar-preview" crossorigin="anonymous" onerror="this.onerror=null; this.outerHTML='<div class=\\'icon-preview\\'><i class=\\'${m.iconClass || 'fa-solid fa-user'}\\'></i></div>';">`;
+          } else {
+            mediaElement = `<div class="icon-preview"><i class="${m.iconClass || 'fa-solid fa-user'}"></i></div>`;
+          }
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${mediaElement}</td>
+            <td>${m.name}</td>
+            <td><span class="role-badge ${(m.role||'member').toLowerCase()}">${m.role || 'MEMBER'}</span></td>
+            <td style="color: #666; font-size: 0.8rem;">${dateStr}</td>
+            <td>
+              <div class="btn-action-group">
+                <button class="btn-edit" onclick="openEditModal('${collectionName}', '${doc.id}', '${escapeQuotes(m.name)}', '${m.role}', '${m.facebook || ''}', '${m.avatar || ''}', '${m.iconClass || ''}')"><i class="fa-solid fa-pen"></i> แก้ไข</button>
+                <button class="btn-del" onclick="deleteMember('${collectionName}', '${doc.id}', '${escapeQuotes(m.name)}')"><i class="fa-solid fa-trash"></i> ลบ</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    function escapeQuotes(str) { return (str || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+    
+    function openEditModal(col, id, name, role, fb, avatar, icon) {
+      document.getElementById('edit-collection').value = col;
+      document.getElementById('edit-doc-id').value = id;
+      document.getElementById('edit-name').value = name;
+      document.getElementById('edit-role').value = role || 'MEMBER';
+      document.getElementById('edit-facebook').value = fb;
+      document.getElementById('edit-avatar').value = avatar;
+      document.getElementById('edit-icon').value = icon;
+      document.getElementById('edit-modal').style.display = 'flex';
+    }
+    
+    function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; }
+    
+    function saveMemberEdit(e) {
+      e.preventDefault();
+      const newName = document.getElementById('edit-name').value.trim();
+      const newRole = document.getElementById('edit-role').value;
+      const colName = document.getElementById('edit-collection').value;
+
+      db.collection(colName).doc(document.getElementById('edit-doc-id').value).update({
+        name: newName,
+        role: newRole,
+        facebook: document.getElementById('edit-facebook').value.trim(),
+        avatar: document.getElementById('edit-avatar').value.trim(),
+        iconClass: document.getElementById('edit-icon').value.trim() || 'fa-solid fa-user'
+      }).then(() => { 
+        showStatus("แก้ไขสำเร็จ", "success"); 
+        sendDiscordAlert("MEMBER EDITED", "INFO", `แก้ไขข้อมูลสมาชิก: **${newName}** (ตำแหน่งใหม่: ${newRole})`);
+        closeEditModal(); 
+      });
+    }
+
+    function deleteMember(col, id, name) {
+      if(confirm(`ต้องการลบ "${name}" หรือไม่?`)) {
+        db.collection(col).doc(id).delete().then(() => {
+          sendDiscordAlert("MEMBER DELETED", "WARNING", `ลบสมาชิก: **${name}** ออกจากฐานข้อมูลแล้ว`);
+        });
+      }
+    }
+
+    // ==========================================
+    // BACKUP & RESTORE SYSTEM
+    // ==========================================
+    const backupCollections = [
+      { type: 'doc', path: 'settings/index_page' },
+      { type: 'doc', path: 'settings/member_page_1' },
+      { type: 'doc', path: 'settings/member_page_2' },
+      { type: 'doc', path: 'settings/member_page_3' },
+      { type: 'doc', path: 'settings/member_page_4' },
+      { type: 'doc', path: 'settings/member_page_5' },
+      { type: 'doc', path: 'settings/member_page_6' },
+      { type: 'doc', path: 'settings/member_page_7' },
+      { type: 'col', path: 'member1_members' },
+      { type: 'col', path: 'member2_members' },
+      { type: 'col', path: 'member3_members' },
+      { type: 'col', path: 'member4_members' },
+      { type: 'col', path: 'member5_members' },
+      { type: 'col', path: 'member6_members' },
+      { type: 'col', path: 'member7_members' }
+    ];
+
+    async function downloadBackup() {
+      try {
+        showStatus("กำลังเตรียมข้อมูล Backup...", "success");
+        const backupData = {
+          timestamp: new Date().toISOString(),
+          data: {}
+        };
+
+        for (let item of backupCollections) {
+          if (item.type === 'doc') {
+            const docSnap = await db.doc(item.path).get();
+            if (docSnap.exists) {
+              backupData.data[item.path] = { type: 'doc', content: docSnap.data() };
+            }
+          } else if (item.type === 'col') {
+            const colSnap = await db.collection(item.path).get();
+            const docs = {};
+            colSnap.forEach(doc => {
+              docs[doc.id] = doc.data();
+            });
+            backupData.data[item.path] = { type: 'col', content: docs };
+          }
+        }
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `snowallstar_backup_${new Date().toISOString().slice(0,10)}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+
+        showStatus("ดาวน์โหลดไฟล์ Backup สำเร็จ!", "success");
+        sendDiscordAlert("BACKUP SUCCESS", "SUCCESS", "ผู้ดูแลระบบได้ทำการดาวน์โหลดไฟล์ Backup ข้อมูลระบบ");
+      } catch (err) {
+        showStatus("เกิดข้อผิดพลาดในการ Backup: " + err.message, "error");
+      }
+    }
+
+    async function restoreBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!confirm("⚠️ คำเตือน: การกู้คืนข้อมูลจะทำการเขียนทับข้อมูลปัจจุบันทั้งหมด คุณแน่ใจหรือไม่?")) {
+        event.target.value = '';
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          showStatus("กำลังกู้คืนข้อมูล กรุณารอ...", "success");
+          const parsedData = JSON.parse(e.target.result);
+          const dataMap = parsedData.data;
+
+          for (let path in dataMap) {
+            const item = dataMap[path];
+            if (item.type === 'doc') {
+              await db.doc(path).set(item.content, { merge: true });
+            } else if (item.type === 'col') {
+              const docs = item.content;
+              for (let docId in docs) {
+                await db.collection(path).doc(docId).set(docs[docId], { merge: true });
+              }
+            }
+          }
+
+          showStatus("กู้คืนข้อมูลสำเร็จเรียบร้อยแล้ว!", "success");
+          sendDiscordAlert("RESTORE SUCCESS", "SUCCESS", "ผู้ดูแลระบบได้ทำการกู้คืนข้อมูล (Restore) เว็บไซต์สำเร็จ");
+          setTimeout(() => location.reload(), 2000);
+        } catch (err) {
+          showStatus("ไฟล์ Backup ไม่ถูกต้องหรือเกิดข้อผิดพลาด: " + err.message, "error");
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
