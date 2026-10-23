@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Profile | Member Portal</title>
+  <link id="site-favicon" rel="icon" href="">
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #08080a;
+      --card-bg: rgba(18, 18, 22, 0.75);
+      --border-color: rgba(255, 255, 255, 0.12);
+      --accent-gray: #8a8a93;
+      --danger: #ff4757;
+      --success: #2ed573;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Kanit', sans-serif; }
+    
+    body { 
+      background-color: var(--bg-main); 
+      background-image: radial-gradient(circle at 50% -20%, #1a1a24, #08080a);
+      color: #ffffff; 
+      min-height: 100vh; 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .container { width: 100%; max-width: 520px; }
+
+    .card {
+      background: var(--card-bg); 
+      border: 1px solid var(--border-color); 
+      border-radius: 18px;
+      padding: 35px; 
+      backdrop-filter: blur(15px); 
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+
+    .brand-title {
+      font-family: 'Bebas Neue', cursive; 
+      font-size: 2.8rem; 
+      letter-spacing: 3px;
+      background: linear-gradient(180deg, #fff 30%, #666 100%); 
+      -webkit-background-clip: text; 
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 25px;
+    }
+
+    .form-group { margin-bottom: 20px; text-align: left; position: relative; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--accent-gray); margin-bottom: 8px; text-transform: uppercase; font-weight: 500; }
+    
+    .form-input, .form-select {
+      width: 100%; padding: 12px 16px; background: rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border-color); border-radius: 10px; color: #ffffff; font-size: 0.95rem; outline: none; transition: 0.3s;
+    }
+    .form-select option { background: #121216; color: #fff; }
+    .form-input:focus, .form-select:focus { border-color: #ffffff; box-shadow: 0 0 12px rgba(255, 255, 255, 0.2); }
+
+    .suggestions-box {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: #121216; border: 1px solid var(--border-color);
+      border-radius: 0 0 10px 10px; max-height: 180px; overflow-y: auto; z-index: 99; display: none;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+    }
+    .suggestion-item {
+      padding: 10px 15px; text-align: left; cursor: pointer; font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s;
+    }
+    .suggestion-item:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+
+    .btn-action {
+      width: 100%; padding: 12px 28px; background: #ffffff; color: #000000; border: none; border-radius: 10px;
+      font-weight: 600; font-size: 1rem; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s ease; margin-top: 10px;
+    }
+    .btn-action:hover { background: #dddddd; transform: translateY(-2px); }
+
+    .status-msg { display: none; padding: 12px; border-radius: 10px; margin-bottom: 20px; font-size: 0.9rem; font-weight: 500; }
+    .status-msg.success { background: rgba(46, 213, 115, 0.15); border: 1px solid var(--success); color: var(--success); }
+    .status-msg.error { background: rgba(255, 71, 87, 0.15); border: 1px solid var(--danger); color: var(--danger); }
+
+    .back-link { display: inline-block; margin-top: 25px; color: var(--accent-gray); text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+    .back-link:hover { color: #fff; }
+
+    #auth-screen, #search-step, #edit-form-container { display: none; }
+    
+    .team-badge-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; margin-bottom: 15px; }
+    .team-badge { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; color: var(--accent-gray); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="card">
+      <div class="brand-title">MEMBER PORTAL</div>
+      <div id="status-box" class="status-msg"></div>
+
+      <!-- สเต็ปที่ 0: หน้าใส่รหัสผ่านแอดมินก่อนเข้าใช้งาน -->
+      <div id="auth-screen" style="display: block;">
+        <p style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem;">กรุณายืนยันรหัสผ่านแอดมินเพื่อเข้าสู่ระบบแก้ไขข้อมูล</p>
+        <form onsubmit="handleAuthLogin(event)">
+          <div class="form-group">
+            <label>รหัสผ่านแอดมิน</label>
+            <input type="password" id="auth-password-input" class="form-input" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn-action">เข้าสู่ระบบ</button>
+        </form>
+      </div>
+
+      <!-- สเต็ปที่ 1: ค้นหาชื่อสมาชิก -->
+      <div id="search-step">
+        <p style="color: var(--accent-gray); margin-bottom: 20px; font-size: 0.9rem; line-height: 1.5;">
+          เลือกสังกัดทีมและพิมพ์ชื่อตัวละคร ระบบจะแสดงรายชื่อแนะนำอัตโนมัติเพื่อให้คุณเลือกแก้ไขได้อย่างถูกต้อง
+        </p>
+        
+        <div class="form-group">
+          <label>เลือกสังกัดทีม</label>
+          <select id="team-select" class="form-select" onchange="onTeamChange()">
+            <option value="ALL">ทุกหมวดหมู่ (ALL TEAMS)</option>
+            <option value="member1_members">SNOWALLSTAR</option>
+            <option value="member2_members">SNOWONSTYLE</option>
+            <option value="member3_members">MIDAIPRO</option>
+            <option value="member4_members">RADUBJUKKRAPHAT</option>
+            <option value="member5_members">KING GHIDORAH</option>
+            <option value="member6_members">Onstar</option>
+            <option value="member7_members">X‘three / XIII</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>ค้นหาชื่อของคุณ</label>
+          <input type="text" id="search-name-input" class="form-input" placeholder="พิมพ์ชื่อเพื่อค้นหา..." autocomplete="off" oninput="handleSearchInput()">
+          <div id="suggestions-container" class="suggestions-box"></div>
+        </div>
+
+        <button type="button" class="btn-action" onclick="verifyMemberName()">ตรวจสอบและแก้ไขข้อมูล</button>
+      </div>
+
+      <!-- สเต็ปที่ 2: ฟอร์มแก้ไขข้อมูล -->
+      <div id="edit-form-container">
+        <p id="welcome-member-text" style="color: var(--success); margin-bottom: 10px; font-weight: 500;"></p>
+        <div id="found-teams-box" class="team-badge-list"></div>
+        
+        <form id="update-profile-form" onsubmit="saveProfileChanges(event)">
+          <div class="form-group">
+            <label>URL รูปโปรไฟล์ใหม่ (Avatar)</label>
+            <input type="text" id="edit-avatar-input" class="form-input" placeholder="https://...">
+          </div>
+
+          <div class="form-group">
+            <label>URL Facebook ใหม่</label>
+            <input type="text" id="edit-facebook-input" class="form-input" placeholder="https://facebook.com/...">
+          </div>
+
+          <button type="submit" class="btn-action" id="btn-save-changes">บันทึกการเปลี่ยนแปลง</button>
+          <button type="button" class="btn-action" style="background: rgba(255,255,255,0.08); color:#fff; border: 1px solid var(--border-color);" onclick="resetSearch()">ค้นหาชื่ออื่นใหม่</button>
+        </form>
+      </div>
+
+      <a href="index.html" class="back-link">กลับสู่หน้าหลัก</a>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // --- ระบบ Domain Lock (ป้องกันการก๊อปไฟล์ HTML หน้าแก้ไขโปรไฟล์ไปรันบนเซิร์ฟเวอร์อื่น) ---
+    const allowedDomains = [
+      "vercel.app", 
+      "localhost",  
+      "127.0.0.1"
+    ];
+    const currentHost = window.location.hostname;
+    const isAllowed = allowedDomains.some(domain => currentHost.includes(domain));
+    if (!isAllowed) {
+      document.body.innerHTML = "<h2 style='color:red; text-align:center; margin-top:20vh;'>Access Denied: Unauthorized Server Cloning Detected!</h2>";
+      setTimeout(() => { window.location.href = "https://www.google.com"; }, 2000);
+      throw new Error("Security Alert: Unauthorized domain clone");
+    }
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCeQskO80VIL_Ktc0x0R7UUMjuZFZQLV8E",
+      authDomain: "snowallstar3.firebaseapp.com",
+      projectId: "snowallstar3",
+      storageBucket: "snowallstar3.firebasestorage.app",
+      messagingSenderId: "222926229337",
+      appId: "1:222926229337:web:c3b4b02e93fdd6bd3ac648"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    const teamMapping = {
+      'member1_members': 'SNOWALLSTAR',
+      'member2_members': 'SNOWONSTYLE',
+      'member3_members': 'MIDAIPRO',
+      'member4_members': 'RADUBJUKKRAPHAT',
+      'member5_members': 'KING GHIDORAH',
+      'member6_members': 'Onstar',
+      'member7_members': 'X‘three / XIII'
+    };
+
+    const allCollections = Object.keys(teamMapping);
+    let cachedMembers = [];
+
+    async function handleAuthLogin(e) {
+      e.preventDefault();
+      const inputPwd = document.getElementById('auth-password-input').value.trim();
+      showStatus("กำลังตรวจสอบรหัสผ่าน...", "success");
+
+      try {
+        const cfgDoc = await db.collection("settings").doc("profile_password_config").get();
+        let correctPwd = "123456";
+        if (cfgDoc.exists && cfgDoc.data().profilePassword) {
+          correctPwd = cfgDoc.data().profilePassword;
+        }
+
+        if (inputPwd !== correctPwd) {
+          showStatus("รหัสผ่านแอดมินไม่ถูกต้อง", "error");
+          return;
+        }
+
+        showStatus("ยืนยันตัวตนสำเร็จ", "success");
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('search-step').style.display = 'block';
+        loadAllMembersCache();
+      } catch (err) {
+        showStatus("เกิดข้อผิดพลาดในการตรวจสอบรหัสผ่าน: " + err.message, "error");
+      }
+    }
+
+    async function loadAllMembersCache() {
+      cachedMembers = [];
+      const selectedVal = document.getElementById('team-select').value;
+      const targetCols = selectedVal === 'ALL' ? allCollections : [selectedVal];
+
+      for (let col of targetCols) {
+        try {
+          const snap = await db.collection(col).get();
+          snap.forEach(doc => {
+            const data = doc.data();
+            if (data.name) {
+              cachedMembers.push({ id: doc.id, col: col, teamName: teamMapping[col], name: data.name, avatar: data.avatar || '', facebook: data.facebook || '' });
+            }
+          });
+        } catch (e) {}
+      }
+    }
+
+    function onTeamChange() {
+      loadAllMembersCache();
+      document.getElementById('search-name-input').value = '';
+      document.getElementById('suggestions-container').style.display = 'none';
+    }
+
+    function handleSearchInput() {
+      const keyword = document.getElementById('search-name-input').value.toLowerCase().trim();
+      const box = document.getElementById('suggestions-container');
+      
+      if (!keyword) {
+        box.style.display = 'none';
+        return;
+      }
+
+      const matches = cachedMembers.filter(m => m.name.toLowerCase().includes(keyword));
+
+      if (matches.length === 0) {
+        box.style.display = 'none';
+        return;
+      }
+
+      box.innerHTML = '';
+      matches.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'suggestion-item';
+        div.innerHTML = `<strong>${m.name}</strong> <span style="font-size:0.75rem; color:var(--accent-gray); float:right;">[${m.teamName}]</span>`;
+        div.onclick = () => {
+          document.getElementById('search-name-input').value = m.name;
+          box.style.display = 'none';
+        };
+        box.appendChild(div);
+      });
+      box.style.display = 'block';
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.form-group')) {
+        document.getElementById('suggestions-container').style.display = 'none';
+      }
+    });
+
+    function showStatus(message, type) {
+      const box = document.getElementById('status-box');
+      box.innerText = message; 
+      box.className = `status-msg ${type}`; 
+      box.style.display = 'block';
+      setTimeout(() => { box.style.display = 'none'; }, 4000);
+    }
+
+    let foundTargets = [];
+
+    async function verifyMemberName() {
+      const selectedCol = document.getElementById('team-select').value;
+      const inputName = document.getElementById('search-name-input').value.trim();
+
+      if (!inputName) {
+        showStatus("กรุณากรอกชื่อตัวละครก่อนค้นหา", "error");
+        return;
+      }
+
+      showStatus("กำลังค้นหาข้อมูลในระบบ...", "success");
+      foundTargets = [];
+
+      try {
+        const colsToSearch = selectedCol === 'ALL' ? allCollections : [selectedCol];
+
+        for (let col of colsToSearch) {
+          const snapshot = await db.collection(col).where("name", "==", inputName).get();
+          snapshot.forEach(docSnap => {
+            foundTargets.push({ id: docSnap.id, col: col, teamName: teamMapping[col], ...docSnap.data() });
+          });
+        }
+
+        if (foundTargets.length === 0) {
+          showStatus("ไม่พบชื่อนี้ในระบบ กรุณาตรวจสอบความถูกต้อง", "error");
+          return;
+        }
+
+        const firstData = foundTargets[0];
+        document.getElementById('edit-avatar-input').value = firstData.avatar || '';
+        document.getElementById('edit-facebook-input').value = firstData.facebook || '';
+        
+        document.getElementById('welcome-member-text').innerText = `พบข้อมูลคุณ "${firstData.name}" เรียบร้อยแล้ว`;
+
+        const teamsBox = document.getElementById('found-teams-box');
+        teamsBox.innerHTML = '<span style="font-size:0.8rem; color:var(--accent-gray); width:100%; text-align:left;">สังกัดทีมที่พบข้อมูล:</span>';
+        foundTargets.forEach(t => {
+          const badge = document.createElement('span');
+          badge.className = 'team-badge';
+          badge.innerText = t.teamName;
+          teamsBox.appendChild(badge);
+        });
+
+        document.getElementById('search-step').style.display = 'none';
+        document.getElementById('edit-form-container').style.display = 'block';
+        document.getElementById('status-box').style.display = 'none';
+
+      } catch (err) {
+        showStatus("เกิดข้อผิดพลาด: " + err.message, "error");
+      }
+    }
+
+    async function saveProfileChanges(e) {
+      e.preventDefault();
+      const newAvatar = document.getElementById('edit-avatar-input').value.trim();
+      const newFacebook = document.getElementById('edit-facebook-input').value.trim();
+
+      const btnSave = document.getElementById('btn-save-changes');
+      btnSave.disabled = true;
+      btnSave.innerHTML = 'กำลังบันทึก...';
+
+      try {
+        const batch = db.batch();
+        foundTargets.forEach(target => {
+          const ref = db.collection(target.col).doc(target.id);
+          batch.update(ref, {
+            avatar: newAvatar,
+            facebook: newFacebook || '#'
+          });
+        });
+
+        await batch.commit();
+
+        showStatus("อัปเดตข้อมูลโปรไฟล์ทุกหมวดหมู่สำเร็จเรียบร้อย", "success");
+        btnSave.disabled = false;
+        btnSave.innerHTML = 'บันทึกการเปลี่ยนแปลง';
+      } catch (err) {
+        showStatus("เกิดข้อผิดพลาด: " + err.message, "error");
+        btnSave.disabled = false;
+        btnSave.innerHTML = 'บันทึกการเปลี่ยนแปลง';
+      }
+    }
+
+    function resetSearch() {
+      document.getElementById('search-step').style.display = 'block';
+      document.getElementById('edit-form-container').style.display = 'none';
+      document.getElementById('search-name-input').value = '';
+      foundTargets = [];
+    }
+  </script>
+</body>
+</html>
